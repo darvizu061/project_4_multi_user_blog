@@ -1,0 +1,132 @@
+/***********************
+*** NOMRALIZE STYLE ****
+***********************/
+html {
+  margin: 0;
+  padding: 0; }
+
+.error {
+  color: red; }
+
+body {
+  background-color: #fffeef;
+  margin: 0;
+  overflow: hidden; }
+/***********************
+*** GENERAL STYLES ****
+***********************/
+.errorText{
+  color: red;
+}
+
+/***********************
+*** BASE.HTML STYLE ****
+***********************/
+.navbar {
+  background-color: #ffcb9f;
+  border: none; }
+  .navbar a.navbar-brand {
+    padding-top: 5px;
+    padding-bottom: 0; }
+    .navbar a.navbar-brand .title {
+      margin: 0;
+      color: white;
+      font-family: 'Lobster', cursive; }
+  .navbar .navbar-nav {
+    margin-right: 0; }
+    .navbar .navbar-nav a {
+      color: white; }
+
+.container {
+  padding-top: 50px; }
+
+/***********************
+*** INDEX.HTML STYLE ***
+***********************/
+#leftHalf {
+  height: 97vh;
+  background-color: #716d6b;
+  background-size: 170% 100%;
+  padding-top: 200px;
+}
+#leftHalf .title {
+    margin: 0 0 10px 50px;
+    color: #fff;
+    font-family: 'Rubik', sans-serif;
+    font-size: 40px;
+}
+#rightHalf {
+  font-family: 'Roboto', sans-serif;
+  height: 92vh;
+  background-color: white;
+  overflow-y: scroll;
+  padding-bottom: 50px;
+}
+#rightHalf .postContainer {
+  border-top: #d5d8da 1px solid;
+}
+#rightHalf .postContainer:hover {
+  border-color: #858788;
+  cursor: pointer;
+}
+#rightHalf .error {
+  color: red;
+}
+#rightHalf a{
+  color: black;
+
+}
+#rightHalf a:hover{
+  text-decoration: none;
+}
+#rightHalf .postTitle{
+  color: #d16247;
+}
+/************************
+*** SIGNUP.HTML STYLE ***
+************************/
+#signupContainer input{
+  width: 400px;
+}
+#signupContainer .submit{
+  width: 90px;
+}
+/************************
+*** LOGIN.HTML STYLE ***
+************************/
+#loginContainer input{
+  width: 400px;
+}
+#loginContainer .submit{
+  width: 90px;
+}
+/*************************
+*** ADDPOST.HTML STYLE ***
+*************************/
+#addPostContainer input, #addPostContainer textarea{
+  width: 400px;
+}
+#addPostContainer .submit{
+  width: 90px;
+}
+/*************************
+*** ADDPOST.HTML STYLE ***
+*************************/
+#newPostMaster form input#title {
+  width: 400px;
+}
+#newPostMaster form textarea {
+  width: 400px;
+  height: 250px;
+}
+
+/****************************
+**** VIEWPOST.HTML STYLE ****
+****************************/
+#viewPostContainer .likeBtn,
+#viewPostContainer .deleteBtn,
+#viewPostContainer .editBtn{
+  display: block;
+  float: right;
+  margin-right: 5px;
+}

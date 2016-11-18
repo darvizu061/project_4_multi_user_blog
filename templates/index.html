@@ -1,0 +1,30 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<div id="leftHalf" class="col-sm-5">
+  <h1 class="title">Where Curious Minds</h1>
+  <h1 class="title">Discuss</h1>
+  <h1 class="title">Great Ideas</h1>
+</div>
+<div id="rightHalf" class="col-sm-7" style="padding-left: 2vw;">
+  <h2 class="text-center">Recent Posts</h2>
+  {% for post in posts %}
+    <a href="post/{{ post.key.id() }}">
+      <div class="postContainer">
+        <h4 class="postTitle">{{ post.post_title }}</h4>
+        <p>{{ post.post_content | safe}}</p>
+
+
+        <div class="row">
+            <div class="col-sm-6">
+                <h5 class="text-left">Created: {{ post.post_created.strftime("%b %d, %Y") }}</h5>
+            </div>
+            <div class="col-sm-6">
+                <h5 class="text-right">Author: {{ post.post_author }}</h5>
+            </div>
+        </div>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+{% endblock %}

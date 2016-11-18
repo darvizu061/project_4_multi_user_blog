@@ -1,0 +1,79 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="row" id="viewPostContainer">
+  <div class="col-sm-10 col-sm-offset-1">
+    <!-- place content -->
+    <h2 class="post-title">{{ post.post_title }}</h2>
+    <hr />
+    <p>{{ post.post_content | safe}}</p>
+    <br>
+    <!-- place post attributes -->
+    <div class="row">
+      <div class="col-sm-6">
+        <h5 class="text-left">
+            Created: {{ post.post_created.strftime("%b %d, %Y") }}
+        </h5>
+      </div>
+      <div class="col-sm-6">
+        <h5 class="text-right">
+            Author: {{ post.post_author }}
+        </h5>
+      </div>
+    </div>
+
+    <br />
+    <!-- if viewer of post is owner => show edit/delete buttons -->
+    {% if post.post_author == user.user_name %}
+
+      <form action="\delete" method="post">
+        <input type="hidden" value="{{ post.key.id() }}" name="postid">
+          <a class="btn btn-warning editBtn" href="/editpost/{{ post.key.id() }}">Edit</a>
+          <input class="btn btn-danger deleteBtn" type="submit"  value="Delete">
+      </form>
+    <!-- else => show like button -->
+    {% else %}
+      {% if user %}
+        <a href="/addlike/{{ post.key.id() }}" class="btn btn-danger likeBtn">{{ like }}</a>
+      {% endif %}
+    {% endif %}
+    <br />
+    <!-- show comments  -->
+    {% for c in comments %}
+    <br />
+    <br />
+      <div class="row">
+        <div class="col-xs-3">
+          <h4>{{ c.comment_author }} says:</h4>
+        </div>
+        <div class="col-xs-7">
+          <p>{{ c.comment_text }}</p>
+        </div>
+        <!-- if viewer created the post => show delete button -->
+        {% if c.comment_author == user.user_name %}
+          <div class="col-xs-2">
+            <form action="/deletecomment" method="post">
+              <input type="hidden" value="{{ c.key.id() }}" name="comment_id" />
+              <input type="submit" class="btn btn-danger" value="Delete">
+            </form>
+          </div>
+        {% endif %}
+      </div>
+      <h6>{{ c.comment_created.strftime("%b %d, %Y  %H:%M") }}</h6>
+    {% endfor %}
+    <hr />
+    <!-- if valid user is viewing the post => enable funtionality to create comment  -->
+    {% if user %}
+    <div class="row">
+      <form method="post" action="\addcomment">
+        <div class="form-group">
+          <input type="hidden" value="{{ post.key.id() }}" name="post_id" />
+          <label for="content">comment:</label>
+          <textarea class="form-control" name="content" placeholder="comment"></textarea>
+        </div>
+        <input type="submit" class="btn btn-primary" value="Submit">
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

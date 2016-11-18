@@ -1,0 +1,25 @@
+{% extends "_base.html" %}
+
+{% block content %}
+<div class="row" id="signupContainer">
+  <h1>Register</h1>
+  <form method="post" id="registerform">
+
+      <label for="username">Username:</label>
+      <input type="text" class="form-control" name="username" id="username">
+
+      <label for="password">Password:</label>
+      <input type="password" class="form-control" name="password" id="password">
+
+      <label for="verify">Verify Password:</label>
+      <input type="password" class="form-control" name="verify" id="verify">
+      <br />
+      <input type="submit" class="btn btn-success submit" value="Register">
+
+      {% if error %}
+        <h4 class="errorText">{{error}}</h4>
+      {% endif %}
+  </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "_base.html" %}
+{% block content %}
+<div id="addPostContainer">
+  <h3>New Post</h3>
+  <form method="post">
+      {% if post %}
+        <input type="hidden" value="{{post.key.id()}}" name="post_id" />
+      {% endif %}
+      <div class="form-group">
+          <label for="title">Title:</label>
+          <input type="text" name="title" placeholder="Title" value="{% if post %}{{ post.post_title }}{% endif %}" class="form-control required" >
+      </div>
+      <div class="form-group">
+        <label for="content">Post:</label>
+        <textarea rows="10" name="content" class="form-control" placeholder="Post">{% if post %}{{ post.post_content | safe}}{% endif %}</textarea>
+      </div>
+
+      <input type="submit" class="btn btn-success submit" value="Create">
+      {% if post %}
+        <a href="/post/{{ post.key.id() }}" class="btn btn-danger" >Cancel</a>
+      {% endif %}
+
+  </form>
+</div>
+
+{% endblock %}
