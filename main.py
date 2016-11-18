@@ -9,8 +9,8 @@ from string import letters
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                               autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                               autoescape=True)
 
 secret = '9fj3n48cnoy437653829'
 
@@ -18,22 +18,28 @@ USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
+
 def make_pw_hash(password, username):
     return hashlib.sha256(password + username + secret).hexdigest()
 
+
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
 
 def check_secure_val(secure_val):
     val = secure_val.split('|')[0]
     if secure_val == make_secure_val(val):
         return val
 
+
 def valid_username(username):
     return username and USER_RE.match(username)
 
+
 def valid_password(password):
     return password and PASS_RE.match(password)
+
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -41,13 +47,15 @@ def render_str(template, **params):
 '''
 DATABASE MODELS
 '''
+
+
 class User(ndb.Model):
-    user_name = ndb.StringProperty(required = True)
-    user_password_hash = ndb.TextProperty(required = True)
+    user_name = ndb.StringProperty(required=True)
+    user_password_hash = ndb.TextProperty(required=True)
 
     @classmethod
     def by_name(cls, name):
-        user = User.query(User.user_name==name).fetch(1)
+        user = User.query(User.user_name == name).fetch(1)
         for u in user:
             return u
 
@@ -57,7 +65,7 @@ class User(ndb.Model):
 
     @classmethod
     def by_name_and_pw(cls, name, password_hash):
-        user = User.query(User.user_name==name).fetch(1)
+        user = User.query(User.user_name == name).fetch(1)
         for u in user:
             if u.user_password_hash == password_hash:
                 return u
@@ -70,21 +78,23 @@ class User(ndb.Model):
 
     @classmethod
     def register_user(cls, name, password_hash):
-        u = User(user_name = name, user_password_hash = password_hash)
+        u = User(user_name=name, user_password_hash=password_hash)
         u.put()
         return u.key.id()
 
+
 class Post(ndb.Model):
-    post_title = ndb.StringProperty(required = True)
-    post_content = ndb.TextProperty(required = True)
-    post_author = ndb.StringProperty(required = True)
-    post_created = ndb.DateTimeProperty(auto_now_add = True)
-    post_last_updated = ndb.DateTimeProperty(auto_now = True)
+    post_title = ndb.StringProperty(required=True)
+    post_content = ndb.TextProperty(required=True)
+    post_author = ndb.StringProperty(required=True)
+    post_created = ndb.DateTimeProperty(auto_now_add=True)
+    post_last_updated = ndb.DateTimeProperty(auto_now=True)
 
     @classmethod
     def add_post(cls, title, content, author):
-        p = Post(post_title = title, post_content = content,
-                 post_author = author)
+        p = Post(post_title=title,
+                 post_content=content,
+                 post_author=author)
         p.put()
         return p.key.id()
 
@@ -111,15 +121,16 @@ class Post(ndb.Model):
         else:
             return False
 
+
 class LikePost(ndb.Model):
-    like_post = ndb.StringProperty(required = True)
-    like_author = ndb.StringProperty(required = True)
-    like_create = ndb.DateTimeProperty(auto_now_add = True)
+    like_post = ndb.StringProperty(required=True)
+    like_author = ndb.StringProperty(required=True)
+    like_create = ndb.DateTimeProperty(auto_now_add=True)
 
     @classmethod
     def add_like(cls, post_id, author):
-        l = LikePost(like_post = str(post_id),
-                     like_author = str(author))
+        l = LikePost(like_post=str(post_id),
+                     like_author=str(author))
         l.put()
         return l.key.id()
 
@@ -140,16 +151,15 @@ class LikePost(ndb.Model):
             return False
 
 
-
 class Comment(ndb.Model):
-    comment_post = ndb.StringProperty(required = True)
-    comment_text = ndb.StringProperty(required = True)
-    comment_created = ndb.DateTimeProperty(auto_now_add = True)
-    comment_author = ndb.StringProperty(required = True)
+    comment_post = ndb.StringProperty(required=True)
+    comment_text = ndb.StringProperty(required=True)
+    comment_created = ndb.DateTimeProperty(auto_now_add=True)
+    comment_author = ndb.StringProperty(required=True)
 
     @classmethod
     def by_post_id(cls, post_id):
-        return Comment.query(Comment.comment_post==post_id)
+        return Comment.query(Comment.comment_post == post_id)
 
     @classmethod
     def get_comment(cls, comment_id):
@@ -157,9 +167,9 @@ class Comment(ndb.Model):
 
     @classmethod
     def add_comment(cls, post_id, text, author):
-        c= Comment(comment_post = str(post_id),
-                   comment_text = str(text),
-                   comment_author = str(author))
+        c = Comment(comment_post=str(post_id),
+                    comment_text=str(text),
+                    comment_author=str(author))
         c.put()
         return c.key.id()
 
@@ -205,10 +215,12 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(uid)
 
+
 class HomePage(Handler):
     def get(self):
         posts = Post.query()
-        self.render('index.html', posts = posts)
+        self.render('index.html', posts=posts)
+
 
 class RegisterPage(Handler):
     def get(self):
@@ -226,7 +238,7 @@ class RegisterPage(Handler):
                     if user:
                         if user.user_name == name:
                             error = "Username Already Taken"
-                            self.render('register.html', error = error)
+                            self.render('register.html', error=error)
                     else:
                         password_hash = make_pw_hash(password, name)
                         user_id = User.register_user(name, password_hash)
@@ -234,17 +246,19 @@ class RegisterPage(Handler):
                         self.redirect('/account')
                 else:
                     error = "Passwords Do Not match."
-                    self.render('register.html', error = error)
+                    self.render('register.html', error=error)
             else:
                 error = "Invalid Password"
-                self.render('register.html', error = error)
+                self.render('register.html', error=error)
         else:
             error = "Invalid Username"
-            self.render('register.html', error = error)
+            self.render('register.html', error=error)
+
 
 class AccountPage(Handler):
     def get(self):
         self.render('account.html')
+
 
 class LoginPage(Handler):
     def get(self):
@@ -261,12 +275,14 @@ class LoginPage(Handler):
             self.redirect('/account')
         else:
             msg = 'Invalid login'
-            self.render('login.html', error = msg)
+            self.render('login.html', error=msg)
+
 
 class LogoutPage(Handler):
     def get(self):
         self.logout()
         self.redirect('/')
+
 
 class PostPage(Handler):
     def get(self, post_id):
@@ -280,7 +296,11 @@ class PostPage(Handler):
             like = LikePost.by_post_and_author(post_id, user.user_name)
             if like:
                 like_text = 'Liked'
-        self.render("viewpost.html", post = post, comments = comments, like = like_text)
+        self.render("viewpost.html",
+                    post=post,
+                    comments=comments,
+                    like=like_text)
+
 
 class AddPostPage(Handler):
     def get(self):
@@ -297,9 +317,9 @@ class AddPostPage(Handler):
         title = self.request.get('title')
         content = self.request.get('content')
         author = user.user_name
-        post_id = Post.add_post(title = title,
-                                        content = content,
-                                        author = author)
+        post_id = Post.add_post(title=title,
+                                content=content,
+                                author=author)
         self.redirect('/post/' + str(post_id))
 
 
@@ -309,7 +329,7 @@ class EditPostPage(Handler):
         if not post:
             self.error()
             return
-        self.render("addpost.html", post = post)
+        self.render("addpost.html", post=post)
 
     def post(self, post_id):
         if not self.user:
@@ -319,11 +339,12 @@ class EditPostPage(Handler):
         title = self.request.get('title')
         content = self.request.get('content')
         author = user.user_name
-        Post.edit_post(title = title,
-                               content = content,
-                               author = author,
-                               post_id = post_id)
+        Post.edit_post(title=title,
+                       content=content,
+                       author=author,
+                       post_id=post_id)
         self.redirect('/post/' + str(post_id))
+
 
 class DeletePost(Handler):
     def get(self):
@@ -346,6 +367,7 @@ class DeletePost(Handler):
             self.error(401)
             return
 
+
 class AddLike(Handler):
     def get(self, post_id):
         if not self.user:
@@ -367,10 +389,14 @@ class AddLike(Handler):
         return self.redirect('/post/'+post_id)
 
         if post_id and content:
-            Comment.add_comment(post_id = post_id, text = content, author = user.user_name)
+            Comment.add_comment(post_id=post_id,
+                                text=content,
+                                author=user.user_name)
+
             return self.redirect('/post/'+post_id)
         else:
             return self.error()
+
 
 class DeleteLike(Handler):
     def get(self):
@@ -385,13 +411,14 @@ class DeleteLike(Handler):
         post = Post.get_post(post_id)
 
         if post.post_author == user.user_name:
-            success =Post.delete_post(int(post_id))
+            success = Post.delete_post(int(post_id))
             if success:
                 self.render('index.html')
                 self.redirect('/')
         else:
             self.error(401)
             return
+
 
 class AddComment(Handler):
     def post(self):
@@ -402,10 +429,14 @@ class AddComment(Handler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            Comment.add_comment(post_id = post_id, text = content, author = user.user_name)
+            Comment.add_comment(post_id=post_id,
+                                text=content,
+                                author=user.user_name)
+
             return self.redirect('/post/'+post_id)
         else:
             return self.error()
+
 
 class EditComment(Handler):
     def post(self):
@@ -416,10 +447,13 @@ class EditComment(Handler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            Comment.add_comment(post_id = post_id, text = content, author = user.user_name)
+            Comment.add_comment(post_id=post_id,
+                                text=content,
+                                author=user.user_name)
             return self.redirect('/post/'+post_id)
         else:
             return self.error()
+
 
 class DeleteComment(Handler):
     def get(self):
