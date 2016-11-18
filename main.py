@@ -14,10 +14,6 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
 
 secret = '9fj3n48cnoy437653829'
 
-USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
-PASS_RE = re.compile(r"^.{3,20}$")
-EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
-
 
 def make_pw_hash(password, username):
     return hashlib.sha256(password + username + secret).hexdigest()
@@ -34,19 +30,18 @@ def check_secure_val(secure_val):
 
 
 def valid_username(username):
+    USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
     return username and USER_RE.match(username)
 
 
 def valid_password(password):
+    PASS_RE = re.compile(r"^.{3,20}$")
     return password and PASS_RE.match(password)
 
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
-'''
-DATABASE MODELS
-'''
 
 
 class User(ndb.Model):
