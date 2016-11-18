@@ -6,6 +6,10 @@ import hmac
 import webapp2
 import jinja2
 from string import letters
+import model_user
+import model_post
+import model_likepost
+import model_comment
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -44,140 +48,6 @@ def render_str(template, **params):
     return t.render(params)
 
 
-class User(ndb.Model):
-    user_name = ndb.StringProperty(required=True)
-    user_password_hash = ndb.TextProperty(required=True)
-
-    @classmethod
-    def by_name(cls, name):
-        user = User.query(User.user_name == name).fetch(1)
-        for u in user:
-            return u
-
-    @classmethod
-    def by_id(cls, user_id):
-        return User.get_by_id(int(user_id))
-
-    @classmethod
-    def by_name_and_pw(cls, name, password_hash):
-        user = User.query(User.user_name == name).fetch(1)
-        for u in user:
-            if u.user_password_hash == password_hash:
-                return u
-            else:
-                return False
-
-    @classmethod
-    def get_user_id(cls, user):
-        return user.key.id()
-
-    @classmethod
-    def register_user(cls, name, password_hash):
-        u = User(user_name=name, user_password_hash=password_hash)
-        u.put()
-        return u.key.id()
-
-
-class Post(ndb.Model):
-    post_title = ndb.StringProperty(required=True)
-    post_content = ndb.TextProperty(required=True)
-    post_author = ndb.StringProperty(required=True)
-    post_created = ndb.DateTimeProperty(auto_now_add=True)
-    post_last_updated = ndb.DateTimeProperty(auto_now=True)
-
-    @classmethod
-    def add_post(cls, title, content, author):
-        p = Post(post_title=title,
-                 post_content=content,
-                 post_author=author)
-        p.put()
-        return p.key.id()
-
-    @classmethod
-    def edit_post(cls, title, content, author, post_id):
-        post = Post.get_by_id(int(post_id))
-        if post:
-            if post.post_author == author:
-                post.post_title = title
-                post.post_content = content
-                post.put()
-                return post.key.id()
-
-    @classmethod
-    def get_post(cls, post_id):
-        return Post.get_by_id(int(post_id))
-
-    @classmethod
-    def delete_post(cls, post_id):
-        post = Post.get_by_id(int(post_id))
-        if post:
-            post.key.delete()
-            return True
-        else:
-            return False
-
-
-class LikePost(ndb.Model):
-    like_post = ndb.StringProperty(required=True)
-    like_author = ndb.StringProperty(required=True)
-    like_create = ndb.DateTimeProperty(auto_now_add=True)
-
-    @classmethod
-    def add_like(cls, post_id, author):
-        l = LikePost(like_post=str(post_id),
-                     like_author=str(author))
-        l.put()
-        return l.key.id()
-
-    @classmethod
-    def by_post_and_author(cls, post_id, author):
-        likes = LikePost.query(LikePost.like_post == post_id and
-                               LikePost.like_author == author).fetch(1)
-        for l in likes:
-            return l
-
-    @classmethod
-    def delete_like(cls, like_id):
-        like = LikePost.get_by_id(int(like_id))
-        if like:
-            like.key.delete()
-            return True
-        else:
-            return False
-
-
-class Comment(ndb.Model):
-    comment_post = ndb.StringProperty(required=True)
-    comment_text = ndb.StringProperty(required=True)
-    comment_created = ndb.DateTimeProperty(auto_now_add=True)
-    comment_author = ndb.StringProperty(required=True)
-
-    @classmethod
-    def by_post_id(cls, post_id):
-        return Comment.query(Comment.comment_post == post_id)
-
-    @classmethod
-    def get_comment(cls, comment_id):
-        return Comment.get_by_id(int(comment_id))
-
-    @classmethod
-    def add_comment(cls, post_id, text, author):
-        c = Comment(comment_post=str(post_id),
-                    comment_text=str(text),
-                    comment_author=str(author))
-        c.put()
-        return c.key.id()
-
-    @classmethod
-    def delete_comment(cls, comment_id):
-        comment = Comment.get_by_id(int(comment_id))
-        if comment:
-            comment.key.delete()
-            return True
-        else:
-            return False
-
-
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -208,12 +78,12 @@ class Handler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
-        self.user = uid and User.by_id(uid)
+        self.user = uid and model_user.User.by_id(uid)
 
 
 class HomePage(Handler):
     def get(self):
-        posts = Post.query()
+        posts = model_post.Post.query()
         self.render('index.html', posts=posts)
 
 
@@ -229,14 +99,15 @@ class RegisterPage(Handler):
         if valid_username(name):
             if valid_password(password):
                 if password == verify:
-                    user = User.by_name(name)
+                    user = model_user.User.by_name(name)
                     if user:
                         if user.user_name == name:
                             error = "Username Already Taken"
                             self.render('register.html', error=error)
                     else:
                         password_hash = make_pw_hash(password, name)
-                        user_id = User.register_user(name, password_hash)
+                        user_id = model_user.User.register_user(name,
+                                                                password_hash)
                         self.set_secure_cookie('user_id', str(user_id))
                         self.redirect('/account')
                 else:
@@ -263,10 +134,11 @@ class LoginPage(Handler):
         name = self.request.get('username')
         password = self.request.get('password')
         password_hash = make_pw_hash(password, name)
-        user = User.by_name_and_pw(
+        user = model_user.User.by_name_and_pw(
             name, password_hash)
         if user:
-            self.set_secure_cookie('user_id', str(User.get_user_id(user)))
+            self.set_secure_cookie('user_id',
+                                   str(model_user.User.get_user_id(user)))
             self.redirect('/account')
         else:
             msg = 'Invalid login'
@@ -281,14 +153,15 @@ class LogoutPage(Handler):
 
 class PostPage(Handler):
     def get(self, post_id):
-        post = Post.get_post(int(post_id))
+        post = model_post.Post.get_post(int(post_id))
         if not post:
             return self.error()
-        comments = Comment.by_post_id(post_id)
+        comments = model_comment.Comment.by_post_id(post_id)
         like_text = 'Like'
         if self.user:
             user = self.user
-            like = LikePost.by_post_and_author(post_id, user.user_name)
+            like = model_likepost.LikePost.by_post_and_author(post_id,
+                                                              user.user_name)
             if like:
                 like_text = 'Liked'
         self.render("viewpost.html",
@@ -312,9 +185,9 @@ class AddPostPage(Handler):
         title = self.request.get('title')
         content = self.request.get('content')
         author = user.user_name
-        post_id = Post.add_post(title=title,
-                                content=content,
-                                author=author)
+        post_id = model_post.Post.add_post(title=title,
+                                           content=content,
+                                           author=author)
         self.redirect('/post/' + str(post_id))
 
 
@@ -334,10 +207,10 @@ class EditPostPage(Handler):
         title = self.request.get('title')
         content = self.request.get('content')
         author = user.user_name
-        Post.edit_post(title=title,
-                       content=content,
-                       author=author,
-                       post_id=post_id)
+        model_post.Post.edit_post(title=title,
+                                  content=content,
+                                  author=author,
+                                  post_id=post_id)
         self.redirect('/post/' + str(post_id))
 
 
@@ -351,10 +224,10 @@ class DeletePost(Handler):
 
         user = self.user
         post_id = self.request.get('postid')
-        post = Post.get_post(post_id)
+        post = model_post.Post.get_post(post_id)
 
         if post.post_author == user.user_name:
-            success = Post.delete_post(int(post_id))
+            success = model_post.Post.delete_post(int(post_id))
             if success:
                 self.render('index.html')
                 self.redirect('/')
@@ -369,24 +242,25 @@ class AddLike(Handler):
             return self.redirect('/')
 
         user = self.user
-        post = Post.get_post(post_id)
+        post = model_post.Post.get_post(post_id)
         if not post:
             return self.redirect('/')
-        like = LikePost.by_post_and_author(post_id, user.user_name)
+        like = model_likepost.LikePost.by_post_and_author(post_id,
+                                                          user.user_name)
         if like:
-            LikePost.delete_like(like.key.id())
+            model_likepost.LikePost.delete_like(like.key.id())
         else:
             if post.post_author == user.user_name:
                 return self.redirect('/')
             else:
-                LikePost.add_like(post_id, user.user_name)
+                model_likepost.LikePost.add_like(post_id, user.user_name)
 
         return self.redirect('/post/'+post_id)
 
         if post_id and content:
-            Comment.add_comment(post_id=post_id,
-                                text=content,
-                                author=user.user_name)
+            model_comment.Comment.add_comment(post_id=post_id,
+                                              text=content,
+                                              author=user.user_name)
 
             return self.redirect('/post/'+post_id)
         else:
@@ -403,10 +277,10 @@ class DeleteLike(Handler):
 
         user = self.user
         post_id = self.request.get('postid')
-        post = Post.get_post(post_id)
+        post = model_post.Post.get_post(post_id)
 
         if post.post_author == user.user_name:
-            success = Post.delete_post(int(post_id))
+            success = model_post.Post.delete_post(int(post_id))
             if success:
                 self.render('index.html')
                 self.redirect('/')
@@ -424,9 +298,9 @@ class AddComment(Handler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            Comment.add_comment(post_id=post_id,
-                                text=content,
-                                author=user.user_name)
+            model_comment.Comment.add_comment(post_id=post_id,
+                                              text=content,
+                                              author=user.user_name)
 
             return self.redirect('/post/'+post_id)
         else:
@@ -442,9 +316,9 @@ class EditComment(Handler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            Comment.add_comment(post_id=post_id,
-                                text=content,
-                                author=user.user_name)
+            model_comment.Comment.add_comment(post_id=post_id,
+                                              text=content,
+                                              author=user.user_name)
             return self.redirect('/post/'+post_id)
         else:
             return self.error()
@@ -460,10 +334,10 @@ class DeleteComment(Handler):
 
         user = self.user
         comment_id = self.request.get('comment_id')
-        comment = Comment.get_comment(comment_id)
+        comment = model_comment.Comment.get_comment(comment_id)
 
         if comment.comment_author == user.user_name:
-            success = Comment.delete_comment(int(comment_id))
+            success = model_comment.Comment.delete_comment(int(comment_id))
             if success:
                 return self.redirect('/')
         else:

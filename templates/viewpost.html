@@ -27,8 +27,8 @@
 
       <form action="\delete" method="post">
         <input type="hidden" value="{{ post.key.id() }}" name="postid">
-          <a class="btn btn-warning editBtn" href="/editpost/{{ post.key.id() }}">Edit</a>
-          <input class="btn btn-danger deleteBtn" type="submit"  value="Delete">
+        <a class="btn btn-warning editBtn" href="/editpost/{{ post.key.id() }}">Edit</a>
+        <input class="btn btn-danger deleteBtn" type="submit"  value="Delete">
       </form>
     <!-- else => show like button -->
     {% else %}
