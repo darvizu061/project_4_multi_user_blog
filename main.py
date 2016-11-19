@@ -193,7 +193,7 @@ class AddPostPage(Handler):
 
 class EditPostPage(Handler):
     def get(self, post_id):
-        post = Post.get_post(int(post_id))
+        post = model_post.Post.get_post(int(post_id))
         if not post:
             self.error()
             return
@@ -308,20 +308,27 @@ class AddComment(Handler):
 
 
 class EditComment(Handler):
-    def post(self):
-        if not self.user:
-            return self.redirect('/')
+    def get(self, comment_id):
+        c = model_comment.Comment.get_by_id(int(comment_id))
+        print self.user.user_name
+        print c.comment_author
 
-        user = self.user
-        post_id = self.request.get('post_id')
-        content = self.request.get('content')
-        if post_id and content:
-            model_comment.Comment.add_comment(post_id=post_id,
-                                              text=content,
-                                              author=user.user_name)
-            return self.redirect('/post/'+post_id)
+        if not c:
+            self.error()
+        elif not self.user.user_name == c.comment_author:
+            self.error()
         else:
-            return self.error()
+            self.render('editcomment.html',
+                        comment=c)
+
+    def post(self, comment_id):
+        if self.user:
+            user = self.user
+            new_text = self.request.get('comment')
+            c = model_comment.Comment.edit_comment(comment_id, new_text)
+            self.redirect('/post/' + c)
+        else:
+            self.redirect('/')
 
 
 class DeleteComment(Handler):
@@ -357,6 +364,6 @@ app = webapp2.WSGIApplication([
     ('/addlike/([0-9]+)', AddLike),
     ('/deletelike', DeleteLike),
     ('/addcomment', AddComment),
-    ('/editcomment', EditComment),
+    ('/editcomment/([0-9]+)', EditComment),
     ('/deletecomment', DeleteComment),
 ], debug=True)

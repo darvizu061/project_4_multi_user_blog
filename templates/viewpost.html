@@ -41,6 +41,8 @@
     {% for c in comments %}
     <br />
     <br />
+    <br />
+    <br />
       <div class="row">
         <div class="col-xs-3">
           <h4>{{ c.comment_author }} says:</h4>
@@ -48,13 +50,19 @@
         <div class="col-xs-7">
           <p>{{ c.comment_text }}</p>
         </div>
-        <!-- if viewer created the post => show delete button -->
+        <!-- if viewer created the comment => show delete and edit buttons -->
         {% if c.comment_author == user.user_name %}
           <div class="col-xs-2">
             <form action="/deletecomment" method="post">
               <input type="hidden" value="{{ c.key.id() }}" name="comment_id" />
+              <a class="btn btn-warning editBtn" href="/editcomment/{{ c.key.id() }}">Edit</a>
               <input type="submit" class="btn btn-danger" value="Delete">
             </form>
+            <br />
+            <!-- <form action="/editcomment" method="post">
+              <input type="hidden" value="{{ c.key.id() }}" name="comment_id" />
+              <input type="submit" class="btn btn-warning" value="Edit">
+            </form> -->
           </div>
         {% endif %}
       </div>

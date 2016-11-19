@@ -1,0 +1,19 @@
+{% extends "_base.html" %}
+{% block content %}
+<div id="editPostContainer">
+  <h3>Edit Post</h3>
+  <form method="post">
+
+      <div class="form-group">
+        <input type="hidden" name="post_id" value="{{comment.comment_post}}">
+        <label for="content">Comment:</label>
+        <textarea rows="10" name="comment" class="form-control">{{comment.comment_text}}</textarea>
+      </div>
+
+      <input type="submit" class="btn btn-success submit" value="Confirm Changes">
+      <a href="/post/{{comment.comment_post}}" class="btn btn-danger" >Cancel</a>
+
+  </form>
+</div>
+
+{% endblock %}

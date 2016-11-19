@@ -24,6 +24,13 @@ class Comment(ndb.Model):
         return c.key.id()
 
     @classmethod
+    def edit_comment(cls, comment_id, new_text):
+        c = Comment.get_comment(comment_id)
+        c.comment_text = new_text
+        c.put()
+        return c.comment_post
+
+    @classmethod
     def delete_comment(cls, comment_id):
         comment = Comment.get_by_id(int(comment_id))
         if comment:
